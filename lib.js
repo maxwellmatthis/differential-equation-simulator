@@ -41,7 +41,7 @@ export const clear = () => {
 
 export class Rect {
   /**
-   * Creates a rectangle. Set its position to show it.
+   * Creates a rectangle. Set its position to show it. (10px = 1m)
    * @param {number} side_length The rectangles side length [m]
    * @param {string} color The color to render with.
    * @param {string} trail Whether to leave behind a lightened trail to show history.
@@ -54,15 +54,13 @@ export class Rect {
 
   /**
    * Sets the square's position to a given set of coordinates. (10px = 1m)
-   * 
-   * __Important:__ The numbers on the y-axis grow down! I.e. P(0, 0) is the top left corner of the screen.
    * @param {number} x Center X-Coordinate [m]
    * @param {number} y Center Y-Coordinate [m]
    */
   setPos(x, y) {
     this.#erase();
     this.x = Math.round(x * 10);
-    this.y = Math.round(y * 10);
+    this.y = Math.round(ctx.canvas.height - y * 10);
     this.#draw();
   }
 

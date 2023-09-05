@@ -5,10 +5,10 @@ import { loop, repeatFor, Rect } from "./lib.js";
   const obj = new Rect(1, "purple");
   loop(() => {
     const v = 20;
-    let s = 0;
+    let s = 2;
     return repeatFor(2, 0.05, (_t, dt) => {
       s = s + v * dt; // s(t_2) = s(t_1) + s'(t_1) * (t_2 - t_1)
-      obj.setPos(s, 30);
+      obj.setPos(s, 50);
     });
   });
 }
@@ -17,12 +17,12 @@ import { loop, repeatFor, Rect } from "./lib.js";
   // --- Der freie Fall auf der Erde ---
   const obj = new Rect(1, "green");
   loop(() => {
-    const a = 9.81;
-    let s = 0;
+    const a = -9.81;
+    let y = 40;
     return repeatFor(3, 0.05, (t, dt) => {
       const v = a * t;
-      s = s + v * dt;
-      obj.setPos(10, s);
+      y = y + v * dt;
+      obj.setPos(3, y);
     });
   });
 }
@@ -32,9 +32,9 @@ import { loop, repeatFor, Rect } from "./lib.js";
   const obj = new Rect(1, "blue");
   loop(() => {
     const v_x = 10;
-    const a_y = 9.81;
-    let x = 0;
-    let y = 0;
+    const a_y = -9.81;
+    let x = 5;
+    let y = 40;
     return repeatFor(3.5, 0.05, (t, dt) => {
       const v_y = a_y * t;
       y = y + v_y * dt;
@@ -48,17 +48,38 @@ import { loop, repeatFor, Rect } from "./lib.js";
   // --- Der lotrechte Wurf auf dem Mond mit beschleunigter Bewegung in -X-Richtung ---
   const obj = new Rect(1, "red");
   loop(() => {
-    const a_x = -0.5;
-    const a_y = 1.625;
+    const a_x = 0.2;
+    const a_y = -1.625;
     let v_x = 0;
-    let v_y = -30;
-    let x = 50;
+    let v_y = 30;
+    let x = 8;
     let y = 30;
     return repeatFor(3, 0.05, (t, dt) => {
       v_x = v_x + a_x * t;
       v_y = v_y + a_y * t;
       x = x + v_x * dt;
       y = y + v_y * dt;
+      obj.setPos(x, y);
+    });
+  });
+}
+
+{
+  // --- Der lotrechte Wurf auf dem Mond mit beschleunigter Bewegung in -X-Richtung mit Bounce ---
+  const obj = new Rect(1, "orange");
+  loop(() => {
+    const a_x = 0.1;
+    const a_y = -1.625;
+    let v_x = 0;
+    let v_y = 30;
+    let x = 10;
+    let y = 1;
+    return repeatFor(6, 0.05, (t, dt) => {
+      v_x = v_x + a_x * t;
+      v_y = v_y + a_y * t;
+      x = x + v_x * dt;
+      y = y + v_y * dt;
+      if (y <= 0) v_y *= -1;
       obj.setPos(x, y);
     });
   });
