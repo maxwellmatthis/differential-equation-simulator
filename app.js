@@ -28,6 +28,21 @@ import { loop, repeatFor, Rect } from "./lib.js";
 }
 
 {
+  // --- Der lotrechte Wurf auf dem Mond ---
+  const obj = new Rect(1, "red");
+  loop(() => {
+    const a_y = -1.625;
+    let v_y = 10;
+    let y = 1;
+    return repeatFor(15, 0.05, (_t, dt) => {
+      v_y = v_y + a_y * dt;
+      y = y + v_y * dt;
+      obj.setPos(8, y);
+    });
+  });
+}
+
+{
   // --- Der schräge Wurf auf der Erde ---
   const obj = new Rect(1, "blue");
   loop(() => {
@@ -45,38 +60,18 @@ import { loop, repeatFor, Rect } from "./lib.js";
 }
 
 {
-  // --- Der lotrechte Wurf auf dem Mond mit beschleunigter Bewegung in -X-Richtung ---
-  const obj = new Rect(1, "red");
-  loop(() => {
-    const a_x = 0.2;
-    const a_y = -1.625;
-    let v_x = 0;
-    let v_y = 30;
-    let x = 8;
-    let y = 30;
-    return repeatFor(3, 0.05, (t, dt) => {
-      v_x = v_x + a_x * t;
-      v_y = v_y + a_y * t;
-      x = x + v_x * dt;
-      y = y + v_y * dt;
-      obj.setPos(x, y);
-    });
-  });
-}
-
-{
-  // --- Der lotrechte Wurf auf dem Mond mit beschleunigter Bewegung in -X-Richtung mit Bounce ---
+  // --- Der lotrechte Wurf auf der Erde mit beschleunigter Bewegung in -X-Richtung mit Bounce ---
   const obj = new Rect(1, "orange");
   loop(() => {
-    const a_x = 0.1;
-    const a_y = -1.625;
+    const a_x = 0.2;
+    const a_y = -9.81;
     let v_x = 0;
     let v_y = 30;
     let x = 10;
     let y = 1;
-    return repeatFor(6, 0.05, (t, dt) => {
-      v_x = v_x + a_x * t;
-      v_y = v_y + a_y * t;
+    return repeatFor(20, 0.005, (_t, dt) => {
+      v_x = v_x + a_x * dt;
+      v_y = v_y + a_y * dt;
       x = x + v_x * dt;
       y = y + v_y * dt;
       if (y <= 0) v_y *= -1;
