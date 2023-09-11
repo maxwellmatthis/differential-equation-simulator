@@ -1,81 +1,71 @@
-import { loop, repeatFor, Rect } from "./lib.js";
+import { Engine, Rect } from "./lib.js";
 
-{
-  // --- Konstante Geschwindigkeit in X-Richtung ---
-  const obj = new Rect(1, "purple");
-  loop(() => {
-    const v = 20;
-    let s = 2;
-    return repeatFor(2, 0.05, (_t, dt) => {
-      s = s + v * dt; // s(t_2) = s(t_1) + s'(t_1) * (t_2 - t_1)
-      obj.setPos(s, 50);
+class KonstanteXBewegung extends Rect {
+  constructor(ix, iy, dt, v = 40) {
+    super(ix, iy, dt);
+    this.registerCompute((dt) => {
+      const x = this.x + v * dt; // s(t_2) = s(t_1) + s'(t_1) * (t_2 - t_1)
+      this.setX(x);
     });
-  });
+  }
 }
 
-{
-  // --- Der freie Fall auf der Erde ---
-  const obj = new Rect(1, "green");
-  loop(() => {
-    const a = -9.81;
-    let y = 40;
-    return repeatFor(3, 0.05, (t, dt) => {
-      const v = a * t;
-      y = y + v * dt;
-      obj.setPos(3, y);
+class FreierFall extends Rect {
+  constructor(ix, iy, dt, a = -9.81) {
+    super(ix, iy, dt);
+    this.registerCompute((dt) => {
+      const y = this.y + a * dt;
+      this.setY(y);
     });
-  });
+  }
 }
 
-{
-  // --- Der lotrechte Wurf auf dem Mond ---
-  const obj = new Rect(1, "red");
-  loop(() => {
-    const a_y = -1.625;
-    let v_y = 10;
-    let y = 1;
-    return repeatFor(15, 0.05, (_t, dt) => {
+class LotrechterWurf extends Rect {
+  constructor(ix, iy, dt, a_y = -1.625, v_y = 10, color) {
+    super(ix, iy, dt, undefined, color);
+    this.registerCompute((dt) => {
       v_y = v_y + a_y * dt;
-      y = y + v_y * dt;
-      obj.setPos(8, y);
+      const y = this.y + v_y * dt;
+      this.setY(y);
     });
-  });
+  }
 }
 
-{
-  // --- Der schräge Wurf auf der Erde ---
-  const obj = new Rect(1, "blue");
-  loop(() => {
-    const v_x = 10;
-    const a_y = -9.81;
-    let x = 5;
-    let y = 40;
-    return repeatFor(3.5, 0.05, (t, dt) => {
-      const v_y = a_y * t;
-      y = y + v_y * dt;
-      x = x + v_x * dt;
-      obj.setPos(x, y);
+class SchrägerWurf extends Rect {
+  constructor(ix, iy, dt, a_y = -9.81, v_x = 20, color) {
+    super(ix, iy, dt, undefined, color);
+    let v_y = 0;
+    this.registerCompute((dt) => {
+      v_y = v_y + a_y * dt;
+      const y = this.y + v_y * dt;
+      const x = this.x + v_x * dt;
+      this.setPos(x, y);
     });
-  });
+  }
 }
 
-{
-  // --- Der lotrechte Wurf auf der Erde mit beschleunigter Bewegung in -X-Richtung mit Bounce ---
-  const obj = new Rect(1, "orange");
-  loop(() => {
-    const a_x = 0.2;
-    const a_y = -9.81;
-    let v_x = 0;
-    let v_y = 30;
-    let x = 10;
-    let y = 1;
-    return repeatFor(20, 0.005, (_t, dt) => {
+class LotrechtBewegt extends Rect {
+  constructor(ix, iy, dt, a_x = 0.2, a_y = -9.81, v_x = 0, v_y = 30, side_length, color) {
+    super(ix, iy, dt, side_length, color);
+    this.registerCompute((dt) => {
       v_x = v_x + a_x * dt;
       v_y = v_y + a_y * dt;
-      x = x + v_x * dt;
-      y = y + v_y * dt;
+      const x = this.x + v_x * dt;
+      const y = this.y + v_y * dt;
       if (y <= 0) v_y *= -1;
-      obj.setPos(x, y);
+      this.setPos(x, y);
     });
-  });
+  }
 }
+
+const engine = new Engine([
+  new KonstanteXBewegung(10, 20, 0.000001),
+  new FreierFall(20, 40, 0.01),
+  new LotrechterWurf(60, 10, 0.001),
+  new SchrägerWurf(20, 70, 0.001, undefined, undefined, "magenta"),
+  new LotrechtBewegt(30, 20, 1, undefined, undefined, undefined, undefined, undefined, "purple"),
+  new LotrechtBewegt(30, 20, 0.1, undefined, undefined, undefined, undefined, undefined, "red"),
+  new LotrechtBewegt(30, 20, 0.01, undefined, undefined, undefined, undefined, undefined, "blue"),
+  new LotrechtBewegt(30, 20, 0.001, undefined, undefined, undefined, undefined, undefined, "green")
+]);
+engine.run(50, 0.001);
