@@ -167,7 +167,11 @@ export class Thing {
   computeIfReady(delta_time_ms) {
     this.time_accumulated_since_last += delta_time_ms;
     if (this.time_accumulated_since_last > this.delta_time_ms) {
-      this.compute(this.time_accumulated_since_last / SECOND_IN_MS);
+      try {
+        this.compute(this.time_accumulated_since_last / SECOND_IN_MS);
+      } catch (error) {
+        console.error(error);
+      }
       this.time_accumulated_since_last = 0;
     }
   }
@@ -199,7 +203,7 @@ export class Rect extends Thing {
    * @param {number} delta_time_s [s] ∆t
    * @param {number} side_length [m] The rectangles side length
    * @param {string} color The color to render with.
-   * @param {string} trail Whether to leave behind a lightened trail to show history.
+   * @param {boolean} trail Whether to leave behind a lightened trail to show history.
    */
   constructor(
     x,
@@ -211,25 +215,62 @@ export class Rect extends Thing {
   ) {
     super(x, y, delta_time_s);
     this.side_length = Math.round(side_length * METERS_IN_PIXELS);
+    this.side_length_halves = this.side_length / 2;
     this.color = color;
     this.trail = trail;
   }
 
-  _afterPositionUpdate(color = this.color) {
+  _afterPositionUpdate() {
+    this._paint();
+  }
+
+  _beforePositionUpdate() {
+    if (this.trail) {
+      this._paint("rgba(256, 256, 256, 0.7)");
+    } else {
+      this._hide();
+    }
+  }
+
+  _paint(color = this.color) {
     defaultCtx.fillStyle = color;
     defaultCtx.fillRect(
-      Math.round(this.x * METERS_IN_PIXELS - this.side_length / 2),
-      Math.round(flipY(this.y * METERS_IN_PIXELS - this.side_length / 2)),
+      Math.round(this.x * METERS_IN_PIXELS - this.side_length_halves),
+      Math.round(flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
       this.side_length,
       this.side_length
     );
   }
 
-  _beforePositionUpdate() {
-    if (this.trail) {
-      this._afterPositionUpdate("rgba(256, 256, 256, 0.7)");
-    } else {
-      this._afterPositionUpdate("rgba(0, 0, 0, 0)");
-    }
+  _hide() {
+    defaultCtx.clearRect(
+      Math.round(this.x * METERS_IN_PIXELS - this.side_length_halves),
+      Math.round(flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
+      this.side_length,
+      this.side_length
+    );
+  }
+
+  /**
+   * Helps update `v_x` depending on an objects position in the canvas.
+   * @param {number} v_x The current x velocity.
+   * @returns `1` or `-1` depending on whether or not the left or right edge is being touched.
+   */
+  verticalEdgeBounceFactor(v_x) {
+    return (
+      (this.x * METERS_IN_PIXELS - this.side_length_halves <= 0 && v_x < 0) ||
+      (this.x * METERS_IN_PIXELS + this.side_length_halves >= defaultCtx.canvas.width && v_x > 0)
+    ) ? -1 : 1;
+  }
+  /**
+   * Helps update `v_y` depending on an objects position in the canvas.
+   * @param {number} v_y The current y velocity.
+   * @returns `1` or `-1` depending on whether or not the top or bottom edge is being touched.
+   */
+  horizontalEdgeBounceFactor(v_y) {
+    return (
+      (this.y * METERS_IN_PIXELS - this.side_length_halves <= 0 && v_y < 0) ||
+      (this.y * METERS_IN_PIXELS + this.side_length_halves >= defaultCtx.canvas.width && v_y > 0)
+    ) ? -1 : 1;
   }
 }
