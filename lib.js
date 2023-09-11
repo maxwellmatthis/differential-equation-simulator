@@ -5,9 +5,39 @@ const canvas = document.querySelector("canvas#view");
 export const defaultCtx = canvas.getContext("2d");
 defaultCtx.canvas.width = Math.floor(html.clientWidth);
 defaultCtx.canvas.height = Math.floor(html.clientHeight);
+const engineTime = document.querySelector("span#engine-time");
+const realTime = document.querySelector("span#real-time");
 
 const SECOND_IN_MS = 1000;
 const METERS_IN_PIXELS = 10;
+
+const unitMeasures = {
+  y: 31557600000,
+  mo: 2629800000,
+  w: 604800000,
+  d: 86400000,
+  h: 3600000,
+  m: 60000,
+  s: 1000,
+  ms: 1,
+};
+/**
+ * Formats milliseconds as `1y 2mo 3w 4d 5h 6m 7s 8ms`.
+ * @param {number} millis Milliseconds to be formatted.
+ */
+function formatTime(millis) {
+  if (millis === 0) return "0s";
+  millis = Math.abs(Math.floor(millis));
+  const parts = [];
+  for (const [unit, ms] of Object.entries(unitMeasures)) {
+    const unitValue = Math.floor(millis / ms);
+    if (unitValue !== 0) {
+      millis -= unitValue * ms;
+      parts.push(unitValue + unit);
+    }
+  }
+  return parts.join(" ");
+}
 
 export class Engine {
   /**
@@ -16,6 +46,7 @@ export class Engine {
    */
   constructor(things = []) {
     this.things = things;
+    this.#computeAll(0);
   }
 
   /**
@@ -24,6 +55,12 @@ export class Engine {
    */
   register(thing) {
     this.things.push(thing);
+    thing.compute(0);
+  }
+
+  #displayStats() {
+    engineTime.textContent = formatTime(this.virtual_runtime);
+    realTime.textContent = formatTime(Date.now() - this.real_runtime_start);
   }
 
   /**
@@ -34,18 +71,33 @@ export class Engine {
   async run(duration_s, min_delta_time_s) {
     const duration_ms = duration_s * SECOND_IN_MS;
     const min_delta_time_ms = min_delta_time_s * SECOND_IN_MS;
-    this.real_runtime = Date.now();
+    this.real_runtime_start = Date.now();
     this.virtual_runtime = 0;
     this.running = true;
+    this.#displayStats();
+    this.metaInterval = setInterval(() => this.#displayStats(), SECOND_IN_MS / 16);
+    let hadAvailableSleepTime = false;
     while (this.running) {
       const start = Date.now();
       this.#computeAll(min_delta_time_ms);
       this.virtual_runtime += min_delta_time_ms;
       if (this.virtual_runtime > duration_ms) break;
       const end = Date.now();
-      await new Promise((resolve, _) => setTimeout(resolve, min_delta_time_ms + end - start));
+      const availableSleepTime = Math.floor(min_delta_time_ms - (end - start));
+      if (availableSleepTime > 0) {
+        hadAvailableSleepTime = true;
+        await new Promise((resolve, _) => setTimeout(resolve, availableSleepTime));
+      }
     }
+    if (!hadAvailableSleepTime) console.warn(
+      "The engine ran without sleeping because registering timers would "
+      + "have caused too much overhead, which would have resulted in a very "
+      + "slow (ca. 50-100x slower) simulation. "
+      + "This typically occurs when the engine is run at a `min_delta_time_s` "
+      + "of less than `0.001` (∆t <= 1ms)."
+    );
     this.stop();
+    this.#displayStats();
   }
 
   #computeAll(delta_time_ms) {
@@ -56,6 +108,7 @@ export class Engine {
 
   stop() {
     this.running = false;
+    clearInterval(this.metaInterval);
   }
 }
 
@@ -125,7 +178,7 @@ export class Thing {
    */
   compute(delta_time_s) {
     if (!this.hasWarned) {
-      console.warn(this, "does not implement the `Thing.compute` method!");
+      console.warn(this.constructor.name + " does not implement the `Thing.compute` method!", this);
       this.hasWarned = true;
     }
   }
