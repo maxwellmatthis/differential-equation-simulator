@@ -1,4 +1,9 @@
-import { Engine, Rect } from "./lib.js";
+const engineTime = document.querySelector("span#engine-time");
+const realTime = document.querySelector("span#real-time");
+/** @type {HTMLCanvasElement} */
+const canvas = document.querySelector("canvas#view");
+
+import { Engine, Rect } from "../lib.js";
 
 class KonstanteXBewegung extends Rect {
   constructor(ix, iy, dt, v = 40) {
@@ -67,7 +72,7 @@ class LotrechtBewegt extends Rect {
   }
 }
 
-const engine = new Engine([
+const engine = new Engine(canvas, [
   new KonstanteXBewegung(10, 20, 0.01),
   new FreierFall(20, 40, 0.01),
   new LotrechterWurf(60, 10, 0.001),
@@ -80,4 +85,5 @@ const engine = new Engine([
 // for (let i = 0; i < 200; i++) {
 //   engine.register(new SchrägerWurf(Math.random() * 100, Math.random() * 100, 0.01, Math.random() * 100, Math.random() * 100));
 // }
+engine.registerHTMLComponents(engineTime, realTime);
 engine.run(50, 0.001);

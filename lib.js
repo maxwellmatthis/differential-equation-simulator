@@ -1,13 +1,3 @@
-// Canvas Setup
-const html = document.querySelector("html");
-/** @type {HTMLCanvasElement} */
-const canvas = document.querySelector("canvas#view");
-export const defaultCtx = canvas.getContext("2d");
-defaultCtx.canvas.width = Math.floor(html.clientWidth);
-defaultCtx.canvas.height = Math.floor(html.clientHeight);
-const engineTime = document.querySelector("span#engine-time");
-const realTime = document.querySelector("span#real-time");
-
 const SECOND_IN_MS = 1000;
 const METERS_IN_PIXELS = 10;
 
@@ -41,26 +31,41 @@ function formatTime(millis) {
 
 export class Engine {
   /**
-   * 
-   * @param {Thing[]} things Things to register on this engine initially
+   * Create a new `Engine` to simulate `Things`.
+   * @param {HTMLCanvasElement} canvas A canvas to paint to.
+   * @param {Thing[]} things Things to register on this engine initially.
    */
-  constructor(things = []) {
+  constructor(canvas, things = []) {
     this.things = things;
+    // Canvas Setup
+    const html = document.querySelector("html");
+    this.ctx = canvas.getContext("2d");
+    this.ctx.canvas.width = Math.floor(html.clientWidth);
+    this.ctx.canvas.height = Math.floor(html.clientHeight);
+    for (const thing of this.things) {
+      thing.registerCanvasContext(this.ctx);
+    }
     this.#computeAll(0);
   }
 
   /**
-   * 
+   * Add a thing to the engine.
    * @param {Thing} thing A new thing.
    */
   register(thing) {
     this.things.push(thing);
+    thing.registerCanvasContext(this.ctx);
     thing.compute(0);
   }
 
+  registerHTMLComponents(engineTimeDisplay, realTimeDisplay, canvas) {
+    this.engineTimeDisplay = engineTimeDisplay;
+    this.realTimeDisplay = realTimeDisplay;
+  }
+
   #displayStats() {
-    engineTime.textContent = formatTime(this.virtual_runtime);
-    realTime.textContent = formatTime(Date.now() - this.real_runtime_start);
+    if (this.engineTimeDisplay) this.engineTimeDisplay.textContent = formatTime(this.virtual_runtime);
+    if (this.realTimeDisplay) this.realTimeDisplay.textContent = formatTime(Date.now() - this.real_runtime_start);
   }
 
   /**
@@ -112,10 +117,6 @@ export class Engine {
   }
 }
 
-function flipY(y_val) {
-  return defaultCtx.canvas.height - y_val;
-}
-
 export class Thing {
   /**
    * @param {number} x Initial x-coordinate.
@@ -123,7 +124,8 @@ export class Thing {
    * @param {number} delta_time_s The time between computations.
    */
   constructor(x = 0, y = 0, delta_time_s = 0.1) {
-    this.setPos(x, y);
+    this.x = x;
+    this.y = y;
     this.delta_time_ms = delta_time_s * SECOND_IN_MS;
     this.time_accumulated_since_last = 0;
   }
@@ -160,6 +162,10 @@ export class Thing {
     this._afterPositionUpdate?.();
   }
 
+  flipY(y_val) {
+    return this.ctx.canvas.height - y_val;
+  }
+
   /**
    * Run the compute function if the thing is ready
    * @param {number} delta_time_ms [ms]
@@ -189,6 +195,10 @@ export class Thing {
 
   registerCompute(fn) {
     this.compute = fn;
+  }
+
+  registerCanvasContext(ctx) {
+    this.ctx = ctx;
   }
 }
 
@@ -233,19 +243,19 @@ export class Rect extends Thing {
   }
 
   _paint(color = this.color) {
-    defaultCtx.fillStyle = color;
-    defaultCtx.fillRect(
+    this.ctx.fillStyle = color;
+    this.ctx.fillRect(
       Math.round(this.x * METERS_IN_PIXELS - this.side_length_halves),
-      Math.round(flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
+      Math.round(this.flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
       this.side_length,
       this.side_length
     );
   }
 
   _hide() {
-    defaultCtx.clearRect(
+    this.ctx.clearRect(
       Math.round(this.x * METERS_IN_PIXELS - this.side_length_halves),
-      Math.round(flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
+      Math.round(this.flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
       this.side_length,
       this.side_length
     );
@@ -259,7 +269,7 @@ export class Rect extends Thing {
   verticalEdgeBounceFactor(v_x) {
     return (
       (this.x * METERS_IN_PIXELS - this.side_length_halves <= 0 && v_x < 0) ||
-      (this.x * METERS_IN_PIXELS + this.side_length_halves >= defaultCtx.canvas.width && v_x > 0)
+      (this.x * METERS_IN_PIXELS + this.side_length_halves >= this.ctx.canvas.width && v_x > 0)
     ) ? -1 : 1;
   }
   /**
@@ -270,7 +280,7 @@ export class Rect extends Thing {
   horizontalEdgeBounceFactor(v_y) {
     return (
       (this.y * METERS_IN_PIXELS - this.side_length_halves <= 0 && v_y < 0) ||
-      (this.y * METERS_IN_PIXELS + this.side_length_halves >= defaultCtx.canvas.width && v_y > 0)
+      (this.y * METERS_IN_PIXELS + this.side_length_halves >= this.ctx.canvas.width && v_y > 0)
     ) ? -1 : 1;
   }
 }
