@@ -71,36 +71,25 @@ export class Engine {
   /**
    * Run the engine.
    * @param {number} duration_s [s] The duration to run the engine for.
-   * @param {number} min_delta_time_s [s] The minimum ∆t that the engine will compute. This determines how quickly the engine runs.
    */
-  async run(duration_s, min_delta_time_s) {
+  async run(duration_s) {
     const duration_ms = duration_s * SECOND_IN_MS;
-    const min_delta_time_ms = min_delta_time_s * SECOND_IN_MS;
     this.real_runtime_start = Date.now();
     this.virtual_runtime = 0;
     this.running = true;
     this.#displayStats();
     this.metaInterval = setInterval(() => this.#displayStats(), SECOND_IN_MS / 16);
-    let hadAvailableSleepTime = false;
+    const timeout = 1000 / 30;
+    let delta_time_ms = timeout;
     while (this.running) {
       const start = Date.now();
-      this.#computeAll(min_delta_time_ms);
-      this.virtual_runtime += min_delta_time_ms;
+      this.#computeAll(delta_time_ms);
+      this.virtual_runtime += delta_time_ms;
       if (this.virtual_runtime > duration_ms) break;
       const end = Date.now();
-      const availableSleepTime = Math.floor(min_delta_time_ms - (end - start));
-      if (availableSleepTime > 0) {
-        hadAvailableSleepTime = true;
-        await new Promise((resolve, _) => setTimeout(resolve, availableSleepTime));
-      }
+      await new Promise((resolve, _) => setTimeout(resolve, timeout-(end-start)));
+      delta_time_ms = Date.now() - start;
     }
-    if (!hadAvailableSleepTime) console.warn(
-      "The engine ran without sleeping because registering timers would "
-      + "have caused too much overhead, which would have resulted in a very "
-      + "slow (ca. 50-100x slower) simulation. "
-      + "This typically occurs when the engine is run at a `min_delta_time_s` "
-      + "of less than `0.001` (∆t <= 1ms)."
-    );
     this.stop();
     this.#displayStats();
   }
@@ -174,7 +163,11 @@ export class Thing {
     this.time_accumulated_since_last += delta_time_ms;
     if (this.time_accumulated_since_last > this.delta_time_ms) {
       try {
-        this.compute(this.time_accumulated_since_last / SECOND_IN_MS);
+        while (this.time_accumulated_since_last > 0) {
+          const dt = Math.min(this.time_accumulated_since_last, this.delta_time_ms);
+          this.compute(dt / SECOND_IN_MS);
+          this.time_accumulated_since_last -= dt;
+        }
       } catch (error) {
         console.error(error);
       }
