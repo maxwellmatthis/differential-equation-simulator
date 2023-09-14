@@ -1,5 +1,6 @@
 const engineTime = document.querySelector("span#engine-time");
 const realTime = document.querySelector("span#real-time");
+const fps = document.querySelector("span#fps");
 /** @type {HTMLCanvasElement} */
 const canvas = document.querySelector("canvas#view");
 
@@ -80,10 +81,11 @@ const engine = new Engine(canvas, [
   new LotrechtBewegt(30, 20, 1, undefined, undefined, undefined, undefined, undefined, "purple"),
   new LotrechtBewegt(30, 20, 0.1, undefined, undefined, undefined, undefined, undefined, "red"),
   new LotrechtBewegt(30, 20, 0.01, undefined, undefined, undefined, undefined, undefined, "orange"),
-  new LotrechtBewegt(30, 20, 0.001, undefined, undefined, undefined, undefined, undefined, "green")
+  new LotrechtBewegt(30, 20, 0.001, undefined, undefined, undefined, undefined, undefined, "green"),
+  new LotrechtBewegt(30, 20, 0.0001, undefined, undefined, undefined, undefined, undefined, "brown")
 ]);
 // for (let i = 0; i < 200; i++) {
 //   engine.register(new SchrägerWurf(Math.random() * 100, Math.random() * 100, 0.01, Math.random() * 100, Math.random() * 100));
 // }
-engine.registerHTMLComponents(engineTime, realTime);
-engine.run(50, 0.001);
+engine.registerHTMLComponents(engineTime, realTime, fps);
+engine.run(50);

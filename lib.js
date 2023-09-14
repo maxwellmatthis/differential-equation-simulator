@@ -45,6 +45,7 @@ export class Engine {
     for (const thing of this.things) {
       thing.registerCanvasContext(this.ctx);
     }
+    this.fps = 30;
     this.#computeAll(0);
   }
 
@@ -58,49 +59,48 @@ export class Engine {
     thing.compute(0);
   }
 
-  registerHTMLComponents(engineTimeDisplay, realTimeDisplay, canvas) {
+  registerHTMLComponents(engineTimeDisplay, realTimeDisplay, fpsDisplay) {
     this.engineTimeDisplay = engineTimeDisplay;
     this.realTimeDisplay = realTimeDisplay;
+    this.fpsDisplay = fpsDisplay;
   }
 
   #displayStats() {
     if (this.engineTimeDisplay) this.engineTimeDisplay.textContent = formatTime(this.virtual_runtime);
     if (this.realTimeDisplay) this.realTimeDisplay.textContent = formatTime(Date.now() - this.real_runtime_start);
+    if (this.fpsDisplay) this.fpsDisplay.textContent = Math.round(this.fps);
+  }
+
+  #render() {
+    for (const thing of this.things) {
+      thing.paint();
+    }
   }
 
   /**
    * Run the engine.
    * @param {number} duration_s [s] The duration to run the engine for.
-   * @param {number} min_delta_time_s [s] The minimum ∆t that the engine will compute. This determines how quickly the engine runs.
    */
-  async run(duration_s, min_delta_time_s) {
+  async run(duration_s) {
     const duration_ms = duration_s * SECOND_IN_MS;
-    const min_delta_time_ms = min_delta_time_s * SECOND_IN_MS;
     this.real_runtime_start = Date.now();
     this.virtual_runtime = 0;
     this.running = true;
     this.#displayStats();
     this.metaInterval = setInterval(() => this.#displayStats(), SECOND_IN_MS / 16);
-    let hadAvailableSleepTime = false;
+    const timeout = 1000 / this.fps;
+    let delta_time_ms = timeout;
     while (this.running) {
       const start = Date.now();
-      this.#computeAll(min_delta_time_ms);
-      this.virtual_runtime += min_delta_time_ms;
+      this.#computeAll(delta_time_ms);
+      this.virtual_runtime += delta_time_ms;
+      this.#render();
       if (this.virtual_runtime > duration_ms) break;
       const end = Date.now();
-      const availableSleepTime = Math.floor(min_delta_time_ms - (end - start));
-      if (availableSleepTime > 0) {
-        hadAvailableSleepTime = true;
-        await new Promise((resolve, _) => setTimeout(resolve, availableSleepTime));
-      }
+      await new Promise((resolve, _) => setTimeout(resolve, timeout-(end-start)));
+      delta_time_ms = Date.now() - start;
+      this.fps = 1000 / delta_time_ms;
     }
-    if (!hadAvailableSleepTime) console.warn(
-      "The engine ran without sleeping because registering timers would "
-      + "have caused too much overhead, which would have resulted in a very "
-      + "slow (ca. 50-100x slower) simulation. "
-      + "This typically occurs when the engine is run at a `min_delta_time_s` "
-      + "of less than `0.001` (∆t <= 1ms)."
-    );
     this.stop();
     this.#displayStats();
   }
@@ -136,10 +136,8 @@ export class Thing {
    * @param {number} y Center Y-Coordinate [m]
    */
   setPos(x = this.x, y = this.y) {
-    this._beforePositionUpdate?.();
     this.x = x;
     this.y = y;
-    this._afterPositionUpdate?.();
   }
 
   /**
@@ -147,9 +145,7 @@ export class Thing {
    * @param {number} x Center X-Coordinate [m]
    */
   setX(x) {
-    this._beforePositionUpdate?.();
     this.x = x;
-    this._afterPositionUpdate?.();
   }
 
   /**
@@ -157,9 +153,7 @@ export class Thing {
    * @param {number} y Center Y-Coordinate [m]
    */
   setY(y) {
-    this._beforePositionUpdate?.();
     this.y = y;
-    this._afterPositionUpdate?.();
   }
 
   flipY(y_val) {
@@ -174,7 +168,11 @@ export class Thing {
     this.time_accumulated_since_last += delta_time_ms;
     if (this.time_accumulated_since_last > this.delta_time_ms) {
       try {
-        this.compute(this.time_accumulated_since_last / SECOND_IN_MS);
+        while (this.time_accumulated_since_last > 0) {
+          const dt = Math.min(this.time_accumulated_since_last, this.delta_time_ms);
+          this.compute(dt / SECOND_IN_MS);
+          this.time_accumulated_since_last -= dt;
+        }
       } catch (error) {
         console.error(error);
       }
@@ -230,32 +228,33 @@ export class Rect extends Thing {
     this.trail = trail;
   }
 
-  _afterPositionUpdate() {
-    this._paint();
-  }
-
-  _beforePositionUpdate() {
+  #hide() {
     if (this.trail) {
-      this._paint("rgba(256, 256, 256, 0.7)");
+      this.ctx.fillStyle = "rgba(256, 256, 256, 0.7)";
+      this.ctx.fillRect(
+        this.lastPaintX,
+        this.lastPaintY,
+        this.side_length,
+        this.side_length
+      );
     } else {
-      this._hide();
+      this.ctx.clearRect(
+        this.lastPaintX,
+        this.lastPaintY,
+        this.side_length,
+        this.side_length
+      );
     }
   }
 
-  _paint(color = this.color) {
+  paint(color = this.color) {
+    this.#hide();
+    this.lastPaintX = Math.round(this.x * METERS_IN_PIXELS - this.side_length_halves)
+    this.lastPaintY = Math.round(this.flipY(this.y * METERS_IN_PIXELS - this.side_length_halves))
     this.ctx.fillStyle = color;
     this.ctx.fillRect(
-      Math.round(this.x * METERS_IN_PIXELS - this.side_length_halves),
-      Math.round(this.flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
-      this.side_length,
-      this.side_length
-    );
-  }
-
-  _hide() {
-    this.ctx.clearRect(
-      Math.round(this.x * METERS_IN_PIXELS - this.side_length_halves),
-      Math.round(this.flipY(this.y * METERS_IN_PIXELS - this.side_length_halves)),
+      this.lastPaintX,
+      this.lastPaintY,
       this.side_length,
       this.side_length
     );
