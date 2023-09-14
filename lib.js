@@ -261,7 +261,7 @@ export class Rect extends Thing {
   horizontalEdgeBounceFactor(v_y) {
     return (
       (this.y * METERS_IN_PIXELS - this.side_length_halves <= 0 && v_y < 0) ||
-      (this.y * METERS_IN_PIXELS + this.side_length_halves >= this.ctx.canvas.width && v_y > 0)
+      (this.y * METERS_IN_PIXELS + this.side_length_halves >= this.ctx.canvas.height && v_y > 0)
     ) ? -1 : 1;
   }
 }

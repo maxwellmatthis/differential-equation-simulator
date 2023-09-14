@@ -63,7 +63,6 @@ class LotrechtBewegt extends Rect {
       v_y = v_y + a_y * dt;
       v_y *= this.horizontalEdgeBounceFactor(v_y);
       this.y = this.y + v_y * dt;
-      if (y <= 0) v_y *= -1;
     });
   }
 }
