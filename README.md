@@ -31,4 +31,4 @@ engine.run(50); // run the engine for 50s
 
 # Demo
 
-[![](./demo/demo.mov)](Demo)
+[![](./demo/demo.mp4)](Demo)
