@@ -1,5 +1,6 @@
 const engineTime = document.querySelector("span#engine-time");
 const realTime = document.querySelector("span#real-time");
+const fps = document.querySelector("span#fps");
 /** @type {HTMLCanvasElement} */
 const canvas = document.querySelector("canvas#view");
 
@@ -86,5 +87,5 @@ const engine = new Engine(canvas, [
 // for (let i = 0; i < 200; i++) {
 //   engine.register(new SchrägerWurf(Math.random() * 100, Math.random() * 100, 0.01, Math.random() * 100, Math.random() * 100));
 // }
-engine.registerHTMLComponents(engineTime, realTime);
+engine.registerHTMLComponents(engineTime, realTime, fps);
 engine.run(50);
