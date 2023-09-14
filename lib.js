@@ -131,36 +131,6 @@ export class Thing {
   }
 
   /**
-   * Sets the thing's position to a given set of coordinates. (10px = 1m)
-   * @param {number} x Center X-Coordinate [m]
-   * @param {number} y Center Y-Coordinate [m]
-   */
-  setPos(x = this.x, y = this.y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  /**
-   * Sets the thing's x-position to a given coordinate. (10px = 1m)
-   * @param {number} x Center X-Coordinate [m]
-   */
-  setX(x) {
-    this.x = x;
-  }
-
-  /**
-   * Sets the thing's y-position to a given coordinate. (10px = 1m)
-   * @param {number} y Center Y-Coordinate [m]
-   */
-  setY(y) {
-    this.y = y;
-  }
-
-  flipY(y_val) {
-    return this.ctx.canvas.height - y_val;
-  }
-
-  /**
    * Run the compute function if the thing is ready
    * @param {number} delta_time_ms [ms]
    */
@@ -185,9 +155,9 @@ export class Thing {
    * @param {number} delta_time_s [s]
    */
   compute(delta_time_s) {
-    if (!this.hasWarned) {
+    if (!this.hasWarnedCompute) {
       console.warn(this.constructor.name + " does not implement the `Thing.compute` method!", this);
-      this.hasWarned = true;
+      this.hasWarnedCompute = true;
     }
   }
 
@@ -197,6 +167,17 @@ export class Thing {
 
   registerCanvasContext(ctx) {
     this.ctx = ctx;
+  }
+
+  flipY(y_val) {
+    return this.ctx.canvas.height - y_val;
+  }
+
+  paint() {
+    if (!this.hasWarnedPaint) {
+      console.warn(this.constructor.name + " does not implement the `Thing.paint` method!", this);
+      this.hasWarnedPaint = true;
+    }
   }
 }
 
@@ -271,6 +252,7 @@ export class Rect extends Thing {
       (this.x * METERS_IN_PIXELS + this.side_length_halves >= this.ctx.canvas.width && v_x > 0)
     ) ? -1 : 1;
   }
+
   /**
    * Helps update `v_y` depending on an objects position in the canvas.
    * @param {number} v_y The current y velocity.

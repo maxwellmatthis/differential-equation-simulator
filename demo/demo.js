@@ -10,9 +10,8 @@ class KonstanteXBewegung extends Rect {
   constructor(ix, iy, dt, v = 40) {
     super(ix, iy, dt);
     this.registerCompute((dt) => {
-      const x = this.x + v * dt; // s(t_2) = s(t_1) + s'(t_1) * (t_2 - t_1)
+      this.x = this.x + v * dt;
       v *= this.verticalEdgeBounceFactor(v);
-      this.setX(x);
     });
   }
 }
@@ -24,8 +23,7 @@ class FreierFall extends Rect {
     this.registerCompute((dt) => {
       v = v + a * dt;
       v *= this.horizontalEdgeBounceFactor(v);
-      const y = this.y + v * dt;
-      this.setY(y);
+      this.y = this.y + v * dt;
     });
   }
 }
@@ -36,8 +34,7 @@ class LotrechterWurf extends Rect {
     this.registerCompute((dt) => {
       v_y = v_y + a_y * dt;
       v_y *= this.horizontalEdgeBounceFactor(v_y);
-      const y = this.y + v_y * dt;
-      this.setY(y);
+      this.y = this.y + v_y * dt;
     });
   }
 }
@@ -49,10 +46,9 @@ class SchrägerWurf extends Rect {
     this.registerCompute((dt) => {
       v_y = v_y + a_y * dt;
       v_y *= this.horizontalEdgeBounceFactor(v_y);
-      const y = this.y + v_y * dt;
+      this.y = this.y + v_y * dt;
       v_x *= this.verticalEdgeBounceFactor(v_x);
-      const x = this.x + v_x * dt;
-      this.setPos(x, y);
+      this.x = this.x + v_x * dt;
     });
   }
 }
@@ -63,12 +59,11 @@ class LotrechtBewegt extends Rect {
     this.registerCompute((dt) => {
       v_x = v_x + a_x * dt;
       v_x *= this.verticalEdgeBounceFactor(v_x);
-      const x = this.x + v_x * dt;
+      this.x = this.x + v_x * dt;
       v_y = v_y + a_y * dt;
       v_y *= this.horizontalEdgeBounceFactor(v_y);
-      const y = this.y + v_y * dt;
+      this.y = this.y + v_y * dt;
       if (y <= 0) v_y *= -1;
-      this.setPos(x, y);
     });
   }
 }
