@@ -31,4 +31,6 @@ engine.run(50); // run the engine for 50s
 
 # Demo
 
-[![](./demo/demo.mp4)](Demo)
+https://github.com/maxwellmatthis/differential-equation-simulator/assets/58150536/de5732c8-a65b-43f0-8666-f14741d02c89
+
+
