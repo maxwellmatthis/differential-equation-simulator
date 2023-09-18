@@ -39,10 +39,13 @@ export class Engine {
   constructor(canvas, things = [], fps = 30) {
     this.things = things;
     // Canvas Setup
-    const html = document.querySelector("html");
     this.ctx = canvas.getContext("2d");
-    this.ctx.canvas.width = Math.floor(html.clientWidth);
-    this.ctx.canvas.height = Math.floor(html.clientHeight);
+    const setCanvasSize = () => {
+      this.ctx.canvas.width = Math.floor(canvas.clientWidth);
+      this.ctx.canvas.height = Math.floor(canvas.clientHeight);
+    }
+    setCanvasSize();
+    if (window) window.addEventListener("resize", setCanvasSize);
     for (const thing of this.things) {
       thing.registerCanvasContext(this.ctx);
     }

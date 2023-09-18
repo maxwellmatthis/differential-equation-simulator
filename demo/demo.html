@@ -6,21 +6,27 @@
   <title>Differential Equation Simulator</title>
   <script src="demo.js" defer type="module"></script>
   <style>
+    html {
+      height: 100vh;
+      width: 100vw;
+    }
     body {
       margin: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
     }
     canvas {
       border: 1px solid black;
+      height: 100%;
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Differential Equation Simulator</h1>
-  </header>
-  <main>
-    <p>Engine Time: <span id="engine-time">N/A</span>; Real Time: <span id="real-time">N/A</span>; FPS: <span id="fps">N/A</span></p>
-    <canvas id="view">Your browser doesn't support the Canvas API.</canvas>
-  </main>
+  <h1>Differential Equation Simulator</h1>
+  <p>Engine Time: <span id="engine-time">N/A</span>; Real Time: <span id="real-time">N/A</span>; FPS: <span id="fps">N/A</span></p>
+  <canvas id="view">Your browser doesn't support the Canvas API.</canvas>
 </body>
 </html>
