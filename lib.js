@@ -34,8 +34,9 @@ export class Engine {
    * Create a new `Engine` to simulate `Things`.
    * @param {HTMLCanvasElement} canvas A canvas to paint to.
    * @param {Thing[]} things Things to register on this engine initially.
+   * @param {Thing[]} fps The display frames per second.
    */
-  constructor(canvas, things = []) {
+  constructor(canvas, things = [], fps = 30) {
     this.things = things;
     // Canvas Setup
     const html = document.querySelector("html");
@@ -45,7 +46,7 @@ export class Engine {
     for (const thing of this.things) {
       thing.registerCanvasContext(this.ctx);
     }
-    this.fps = 30;
+    this.fps = fps;
     this.#computeAll(0);
   }
 
@@ -79,9 +80,9 @@ export class Engine {
 
   /**
    * Run the engine.
-   * @param {number} duration_s [s] The duration to run the engine for.
+   * @param {number} duration_s [s] The duration to run the engine for. Default = `Infinity`
    */
-  async run(duration_s) {
+  async run(duration_s = Infinity) {
     const duration_ms = duration_s * SECOND_IN_MS;
     this.real_runtime_start = Date.now();
     this.virtual_runtime = 0;

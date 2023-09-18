@@ -82,4 +82,4 @@ const engine = new Engine(canvas, [
 //   engine.register(new SchrägerWurf(Math.random() * 100, Math.random() * 100, 0.01, Math.random() * 100, Math.random() * 100));
 // }
 engine.registerHTMLComponents(engineTime, realTime, fps);
-engine.run(50);
+engine.run();
